@@ -4,7 +4,7 @@
 #http://www.binarytides.com/python-packet-sniffer-code-linux/
 #Silver Moon (m00n.silv3r@gmail.com)
 
-import socket, sys
+import socket, sys, time
 from struct import *
 
 class Sniffer:
@@ -14,8 +14,9 @@ class Sniffer:
       return b
 
     def run(self):
-        while True:
-            packet = s.recvfrom(65565)
+        time_end = time.time() + 10
+        while time.time() < time_end:
+            packet = self.s.recvfrom(65565)
             #packet string from tuple
             packet = packet[0]
 
@@ -45,7 +46,7 @@ class Sniffer:
                 s_addr = socket.inet_ntoa(iph[8]);
                 d_addr = socket.inet_ntoa(iph[9]);
 
-                print 'Source Address : ' + str(s_addr) + '\nDestination Address : ' + str(d_addr)
+                #print 'Source Address : ' + str(s_addr) + '\nDestination Address : ' + str(d_addr)
 
                 #TCP protocol
                 if protocol == 6 :
@@ -54,7 +55,7 @@ class Sniffer:
                     tcph = unpack('!HHLLBBHHH' , tcp_header)
                     source_port = tcph[0]
                     dest_port = tcph[1]
-                    print 'Source Port : ' + str(source_port) + '\nDest Port : ' + str(dest_port) + '\nProtocol : TCP'
+                    #print 'Source Port : ' + str(source_port) + '\nDest Port : ' + str(dest_port) + '\nProtocol : TCP'
 
                 #UDP packets
                 elif protocol == 17 :
@@ -67,19 +68,26 @@ class Sniffer:
 
                     source_port = udph[0]
                     dest_port = udph[1]
-                    print 'Source Port : ' + str(source_port) + '\nDest Port : ' + str(dest_port) + '\nProtocol : UDP'
-
+                    #print 'Source Port : ' + str(source_port) + '\nDest Port : ' + str(dest_port) + '\nProtocol : UDP'
                 #some other IP packet like IGMP
-                else :
-                    print 'Protocol other than TCP/UDP'
+                #else :
+                    #print 'Protocol other than TCP/UDP'
 
-                print
-
+                flow = self.buffer.get((str(s_addr), str(d_addr), str(source_port), str(dest_port), protocol))
+                now = time.time()
+                if ( flow == None):
+                    #print "New"
+                    self.buffer[(str(s_addr), str(d_addr), str(source_port), str(dest_port), protocol)] = [now, now, 0]
+                else:
+                    #print "Update"
+                    self.buffer[(str(s_addr), str(d_addr), str(source_port), str(dest_port), protocol)] = [flow[0], now, now-flow[0]]
+        return self.buffer
     #create a AF_PACKET type raw socket (thats basically packet level)
     #define ETH_P_ALL    0x0003          /* Every packet (be careful!!!) */
     def __init__(self):
         try:
-            global s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
+            self.buffer = {}
+            self.s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
         except socket.error , msg:
             print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
