@@ -84,6 +84,9 @@ class Sniffer:
         return self.buffer
     #create a AF_PACKET type raw socket (thats basically packet level)
     #define ETH_P_ALL    0x0003          /* Every packet (be careful!!!) */
+    def flush_buffer(self):
+        self.buffer = {}
+
     def __init__(self):
         try:
             self.buffer = {}
