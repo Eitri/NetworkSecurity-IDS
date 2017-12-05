@@ -1,4 +1,4 @@
-l#Packet sniffer in python
+#Packet sniffer in python
 #For Linux - Sniffs all incoming and outgoing packets
 #Adapted from
 #http://www.binarytides.com/python-packet-sniffer-code-linux/
@@ -9,11 +9,11 @@ from struct import *
 
 class Sniffer:
 #Convert a string of 6 characters of ethernet address into a dash separated hex string
-    def eth_addr (a) :
+    def eth_addr (self, a) :
       b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
       return b
 
-    def run():
+    def run(self):
         while True:
             packet = s.recvfrom(65565)
             #packet string from tuple
@@ -77,9 +77,9 @@ class Sniffer:
 
     #create a AF_PACKET type raw socket (thats basically packet level)
     #define ETH_P_ALL    0x0003          /* Every packet (be careful!!!) */
-    def __init__:
+    def __init__(self):
         try:
-            s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
+            global s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
         except socket.error , msg:
             print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
