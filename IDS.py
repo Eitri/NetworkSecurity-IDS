@@ -17,18 +17,58 @@ def buffer_trim(buffer, timerange):
             del(buffer[k])
     return buffer
 
+def get_sources(flows, source_set):
+    for key in flows:
+        source_set.add(key[0])
+    return source_set
+
+def varied_connections(flows, sip):
+    count = 0
+    for key in flows:
+        if key[0] == sip:
+            count += 1
+    return count
+
+def average_duration(flows, sip):
+    port_count = 0
+    total_duration = 0
+    for key, val in flows.items():
+        if key[0] == sip:
+            total_duration += val[2]
+            count += 1
+    if count == 0:
+        return 0
+    else:
+        return total_duration/count
+
+def raise_alert(sip, severity):
+    if severity == 'high':
+        print "////////////////////////////////////////////////////////////////"
+        print "     WARNING: LIKELY SCANNING ATTACK FROM SOURCE IP: " + sip
+        print "////////////////////////////////////////////////////////////////"
+    else:
+        print "Possible Scanning Attack from Source IP: " + sip
 
 def main(sniffer):
     main_buffer = {}
+    source_set = set()
     while(True):
+        flag = False
         temp_buffer = sniffer.run()
-        print "Sniffer ran for 10 seconds. " + str(len(temp_buffer)) + " flows were created."
-        ###
-        ###ANALYZE
-        ###
         main_buffer = buffer_merge(main_buffer, temp_buffer)
-        print "Total Size of buffer: " + str(len(main_buffer))
-        main_buffer = buffer_trim(main_buffer, 20)
+
+        for sip in source_set:
+            if varied_connections(main_buffer, sip) > 3:
+                if average_duration(main_buffer, sip) < 1:
+                    raise_high_alert(sip, 'high')
+                    flag = True
+                else:
+                    raise_low_alert(sip, 'low')
+                    flag = True
+        if not flag:
+            print "No Suspicious Events Logged in Last Run Cycle."
+
+        main_buffer = buffer_trim(main_buffer, 60)
         sniffer.flush_buffer()
 
 if __name__ == "__main__":
